@@ -16,6 +16,7 @@ class Ingreso extends Model
     ];
 
     protected $fillable = [
+        'user_id',
         'fecha',
         'aportante_id',
         'monto',
@@ -33,5 +34,10 @@ class Ingreso extends Model
     public function aportante(): BelongsTo
     {
         return $this->belongsTo(Aportante::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

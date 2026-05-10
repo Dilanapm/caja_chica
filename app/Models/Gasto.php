@@ -16,6 +16,7 @@ class Gasto extends Model
     ];
 
     protected $fillable = [
+        'user_id',
         'fecha',
         'aportante_id',
         'categoria_id',
@@ -40,5 +41,10 @@ class Gasto extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(CategoriaGasto::class, 'categoria_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

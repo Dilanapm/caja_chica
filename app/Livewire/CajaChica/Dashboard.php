@@ -14,9 +14,13 @@ class Dashboard extends Component
 {
     public function render()
     {
-        $saldoTotal = (float) Ingreso::query()->sum('monto') - (float) Gasto::query()->sum('monto');
+        $userId = (int) auth()->id();
+
+        $saldoTotal = (float) Ingreso::query()->where('user_id', $userId)->sum('monto')
+            - (float) Gasto::query()->where('user_id', $userId)->sum('monto');
 
         $aportantesClave = Aportante::query()
+            ->where('user_id', $userId)
             ->whereIn('nombre', ['Reina Marino Marca', 'Fermin Apolaca Marca'])
             ->get()
             ->keyBy('nombre');
@@ -24,15 +28,15 @@ class Dashboard extends Component
         $saldoReina = 0.0;
         if ($aportantesClave->has('Reina Marino Marca')) {
             $aportanteId = (int) $aportantesClave->get('Reina Marino Marca')->id;
-            $saldoReina = (float) Ingreso::query()->where('aportante_id', $aportanteId)->sum('monto')
-                - (float) Gasto::query()->where('aportante_id', $aportanteId)->sum('monto');
+            $saldoReina = (float) Ingreso::query()->where('user_id', $userId)->where('aportante_id', $aportanteId)->sum('monto')
+                - (float) Gasto::query()->where('user_id', $userId)->where('aportante_id', $aportanteId)->sum('monto');
         }
 
         $saldoFermin = 0.0;
         if ($aportantesClave->has('Fermin Apolaca Marca')) {
             $aportanteId = (int) $aportantesClave->get('Fermin Apolaca Marca')->id;
-            $saldoFermin = (float) Ingreso::query()->where('aportante_id', $aportanteId)->sum('monto')
-                - (float) Gasto::query()->where('aportante_id', $aportanteId)->sum('monto');
+            $saldoFermin = (float) Ingreso::query()->where('user_id', $userId)->where('aportante_id', $aportanteId)->sum('monto')
+                - (float) Gasto::query()->where('user_id', $userId)->where('aportante_id', $aportanteId)->sum('monto');
         }
 
         $inicioMes = Carbon::now()->startOfMonth()->toDateString();
@@ -40,6 +44,7 @@ class Dashboard extends Component
 
         $gastosMesPorCategoria = Gasto::query()
             ->select('categoria_id', DB::raw('SUM(monto) as total'))
+            ->where('user_id', $userId)
             ->whereBetween('fecha', [$inicioMes, $finMes])
             ->groupBy('categoria_id')
             ->with('categoria')
@@ -48,6 +53,7 @@ class Dashboard extends Component
 
         $ultimosIngresos = Ingreso::query()
             ->with('aportante')
+            ->where('user_id', $userId)
             ->orderByDesc('fecha')
             ->orderByDesc('id')
             ->limit(10)
@@ -55,6 +61,7 @@ class Dashboard extends Component
 
         $ultimosGastos = Gasto::query()
             ->with(['aportante', 'categoria'])
+            ->where('user_id', $userId)
             ->orderByDesc('fecha')
             ->orderByDesc('id')
             ->limit(10)

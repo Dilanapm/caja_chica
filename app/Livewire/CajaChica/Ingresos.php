@@ -69,9 +69,15 @@ class Ingresos extends Component
 
     protected function rules(): array
     {
+        $userId = (int) auth()->id();
+
         return [
             'fecha' => ['required', 'date'],
-            'aportante_id' => ['required', 'integer', 'exists:aportantes,id'],
+            'aportante_id' => [
+                'required',
+                'integer',
+                Rule::exists('aportantes', 'id')->where(fn ($q) => $q->where('user_id', $userId)),
+            ],
             'monto' => ['required', 'numeric', 'gt:0'],
             'metodo_ingreso' => ['required', Rule::in(Ingreso::METODOS)],
             'referencia' => ['nullable', 'string', 'max:255'],
@@ -82,9 +88,11 @@ class Ingresos extends Component
 
     public function save(): void
     {
+        $userId = (int) auth()->id();
         $data = $this->validate();
 
         $payload = [
+            'user_id' => $userId,
             'fecha' => $data['fecha'],
             'aportante_id' => $data['aportante_id'],
             'monto' => $data['monto'],
@@ -94,7 +102,9 @@ class Ingresos extends Component
         ];
 
         if ($this->ingresoId) {
-            $ingreso = Ingreso::query()->findOrFail($this->ingresoId);
+            $ingreso = Ingreso::query()
+                ->where('user_id', $userId)
+                ->findOrFail($this->ingresoId);
             $oldPath = $ingreso->comprobante_path;
 
             if ($this->comprobante) {
@@ -122,7 +132,11 @@ class Ingresos extends Component
 
     public function edit(int $id): void
     {
-        $ingreso = Ingreso::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $ingreso = Ingreso::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
 
         $this->ingresoId = (int) $ingreso->id;
         $this->fecha = $ingreso->fecha->toDateString();
@@ -145,7 +159,11 @@ class Ingresos extends Component
 
     public function delete(int $id): void
     {
-        $ingreso = Ingreso::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $ingreso = Ingreso::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
 
         if ($ingreso->comprobante_path && str_starts_with($ingreso->comprobante_path, 'comprobantes/ingresos/')) {
             Storage::disk('public')->delete($ingreso->comprobante_path);
@@ -173,8 +191,11 @@ class Ingresos extends Component
 
     public function render()
     {
+        $userId = (int) auth()->id();
+
         $query = Ingreso::query()
             ->with('aportante')
+            ->where('user_id', $userId)
             ->orderByDesc('fecha')
             ->orderByDesc('id');
 
@@ -203,7 +224,10 @@ class Ingresos extends Component
         }
 
         return view('livewire.caja-chica.ingresos', [
-            'aportantes' => Aportante::query()->orderBy('nombre')->get(),
+            'aportantes' => Aportante::query()
+                ->where('user_id', $userId)
+                ->orderBy('nombre')
+                ->get(),
             'ingresos' => $query->paginate($this->perPage),
             'metodos' => Ingreso::METODOS,
         ])->layout('layouts.app', [

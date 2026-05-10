@@ -17,12 +17,16 @@ class Aportantes extends Component
 
     protected function rules(): array
     {
+        $userId = (int) auth()->id();
+
         return [
             'nombre' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('aportantes', 'nombre')->ignore($this->aportanteId),
+                Rule::unique('aportantes', 'nombre')
+                    ->where(fn ($q) => $q->where('user_id', $userId))
+                    ->ignore($this->aportanteId),
             ],
             'nota' => ['nullable', 'string'],
             'activo' => ['boolean'],
@@ -31,14 +35,20 @@ class Aportantes extends Component
 
     public function save(): void
     {
+        $userId = (int) auth()->id();
         $data = $this->validate();
 
         if ($this->aportanteId) {
-            $aportante = Aportante::query()->findOrFail($this->aportanteId);
+            $aportante = Aportante::query()
+                ->where('user_id', $userId)
+                ->findOrFail($this->aportanteId);
             $aportante->update($data);
             $this->dispatch('toast', message: 'Aportante actualizado.');
         } else {
-            Aportante::query()->create($data);
+            Aportante::query()->create([
+                ...$data,
+                'user_id' => $userId,
+            ]);
             $this->dispatch('toast', message: 'Aportante creado.');
         }
 
@@ -47,7 +57,11 @@ class Aportantes extends Component
 
     public function edit(int $id): void
     {
-        $aportante = Aportante::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $aportante = Aportante::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
 
         $this->aportanteId = (int) $aportante->id;
         $this->nombre = (string) $aportante->nombre;
@@ -62,7 +76,11 @@ class Aportantes extends Component
 
     public function toggleActivo(int $id): void
     {
-        $aportante = Aportante::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $aportante = Aportante::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
         $aportante->update(['activo' => ! (bool) $aportante->activo]);
         $estado = $aportante->fresh()->activo ? 'activado' : 'desactivado';
         $this->dispatch('toast', message: "Aportante {$estado}.");
@@ -82,7 +100,10 @@ class Aportantes extends Component
     public function render()
     {
         return view('livewire.caja-chica.aportantes', [
-            'aportantes' => Aportante::query()->orderBy('nombre')->get(),
+            'aportantes' => Aportante::query()
+                ->where('user_id', (int) auth()->id())
+                ->orderBy('nombre')
+                ->get(),
         ])->layout('layouts.app', [
             'header' => new HtmlString('<h2 class="font-semibold text-xl text-gray-800 leading-tight">Aportantes</h2>'),
         ]);

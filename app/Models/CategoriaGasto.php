@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CategoriaGasto extends Model
 {
     protected $table = 'categorias_gasto';
 
     protected $fillable = [
+        'user_id',
         'nombre',
         'descripcion',
         'activo',
@@ -22,5 +24,10 @@ class CategoriaGasto extends Model
     public function gastos(): HasMany
     {
         return $this->hasMany(Gasto::class, 'categoria_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

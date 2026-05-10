@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Aportante;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class AportanteSeeder extends Seeder
@@ -12,16 +13,24 @@ class AportanteSeeder extends Seeder
      */
     public function run(): void
     {
+        $userIds = User::query()->pluck('id');
+
+        if ($userIds->isEmpty()) {
+            return;
+        }
+
         $nombres = [
             'Reina Marino Marca',
             'Fermin Apolaca Marca',
         ];
 
-        foreach ($nombres as $nombre) {
-            Aportante::updateOrCreate(
-                ['nombre' => $nombre],
-                ['activo' => true]
-            );
+        foreach ($userIds as $userId) {
+            foreach ($nombres as $nombre) {
+                Aportante::updateOrCreate(
+                    ['user_id' => $userId, 'nombre' => $nombre],
+                    ['activo' => true]
+                );
+            }
         }
     }
 }

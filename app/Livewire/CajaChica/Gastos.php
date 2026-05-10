@@ -74,10 +74,20 @@ class Gastos extends Component
 
     protected function rules(): array
     {
+        $userId = (int) auth()->id();
+
         return [
             'fecha' => ['required', 'date'],
-            'aportante_id' => ['required', 'integer', 'exists:aportantes,id'],
-            'categoria_id' => ['required', 'integer', 'exists:categorias_gasto,id'],
+            'aportante_id' => [
+                'required',
+                'integer',
+                Rule::exists('aportantes', 'id')->where(fn ($q) => $q->where('user_id', $userId)),
+            ],
+            'categoria_id' => [
+                'required',
+                'integer',
+                Rule::exists('categorias_gasto', 'id')->where(fn ($q) => $q->where('user_id', $userId)),
+            ],
             'monto' => ['required', 'numeric', 'gt:0'],
             'metodo_pago' => ['required', Rule::in(Gasto::METODOS)],
             'descripcion' => ['required', 'string', 'max:255'],
@@ -89,6 +99,7 @@ class Gastos extends Component
 
     public function save(): void
     {
+        $userId = (int) auth()->id();
         $data = $this->validate();
 
         $saldoDisponible = $this->saldoDisponibleParaAportante((int) $data['aportante_id']);
@@ -98,6 +109,7 @@ class Gastos extends Component
         }
 
         $payload = [
+            'user_id' => $userId,
             'fecha' => $data['fecha'],
             'aportante_id' => $data['aportante_id'],
             'categoria_id' => $data['categoria_id'],
@@ -109,7 +121,9 @@ class Gastos extends Component
         ];
 
         if ($this->gastoId) {
-            $gasto = Gasto::query()->findOrFail($this->gastoId);
+            $gasto = Gasto::query()
+                ->where('user_id', $userId)
+                ->findOrFail($this->gastoId);
             $oldPath = $gasto->comprobante_path;
 
             if ($this->comprobante) {
@@ -137,7 +151,11 @@ class Gastos extends Component
 
     public function edit(int $id): void
     {
-        $gasto = Gasto::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $gasto = Gasto::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
 
         $this->gastoId = (int) $gasto->id;
         $this->fecha = $gasto->fecha->toDateString();
@@ -162,7 +180,11 @@ class Gastos extends Component
 
     public function delete(int $id): void
     {
-        $gasto = Gasto::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $gasto = Gasto::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
 
         if ($gasto->comprobante_path && str_starts_with($gasto->comprobante_path, 'comprobantes/gastos/')) {
             Storage::disk('public')->delete($gasto->comprobante_path);
@@ -174,9 +196,16 @@ class Gastos extends Component
 
     private function saldoDisponibleParaAportante(int $aportanteId): float
     {
-        $ingresos = (float) Ingreso::query()->where('aportante_id', $aportanteId)->sum('monto');
+        $userId = (int) auth()->id();
 
-        $gastosQuery = Gasto::query()->where('aportante_id', $aportanteId);
+        $ingresos = (float) Ingreso::query()
+            ->where('user_id', $userId)
+            ->where('aportante_id', $aportanteId)
+            ->sum('monto');
+
+        $gastosQuery = Gasto::query()
+            ->where('user_id', $userId)
+            ->where('aportante_id', $aportanteId);
         if ($this->gastoId) {
             $gastosQuery->where('id', '!=', $this->gastoId);
         }
@@ -206,8 +235,11 @@ class Gastos extends Component
 
     public function render()
     {
+        $userId = (int) auth()->id();
+
         $query = Gasto::query()
             ->with(['aportante', 'categoria'])
+            ->where('user_id', $userId)
             ->orderByDesc('fecha')
             ->orderByDesc('id');
 
@@ -240,8 +272,14 @@ class Gastos extends Component
         }
 
         return view('livewire.caja-chica.gastos', [
-            'aportantes' => Aportante::query()->orderBy('nombre')->get(),
-            'categorias' => CategoriaGasto::query()->orderBy('nombre')->get(),
+            'aportantes' => Aportante::query()
+                ->where('user_id', $userId)
+                ->orderBy('nombre')
+                ->get(),
+            'categorias' => CategoriaGasto::query()
+                ->where('user_id', $userId)
+                ->orderBy('nombre')
+                ->get(),
             'gastos' => $query->paginate($this->perPage),
             'metodos' => Gasto::METODOS,
         ])->layout('layouts.app', [

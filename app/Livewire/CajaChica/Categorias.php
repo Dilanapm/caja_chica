@@ -27,14 +27,20 @@ class Categorias extends Component
 
     public function save(): void
     {
+        $userId = (int) auth()->id();
         $data = $this->validate();
 
         if ($this->categoriaId) {
-            $categoria = CategoriaGasto::query()->findOrFail($this->categoriaId);
+            $categoria = CategoriaGasto::query()
+                ->where('user_id', $userId)
+                ->findOrFail($this->categoriaId);
             $categoria->update($data);
             $this->dispatch('toast', message: 'Categoría actualizada.');
         } else {
-            CategoriaGasto::query()->create($data);
+            CategoriaGasto::query()->create([
+                ...$data,
+                'user_id' => $userId,
+            ]);
             $this->dispatch('toast', message: 'Categoría creada.');
         }
 
@@ -43,7 +49,11 @@ class Categorias extends Component
 
     public function edit(int $id): void
     {
-        $categoria = CategoriaGasto::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $categoria = CategoriaGasto::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
 
         $this->categoriaId = (int) $categoria->id;
         $this->nombre = (string) $categoria->nombre;
@@ -58,17 +68,24 @@ class Categorias extends Component
 
     public function delete(int $id): void
     {
-        $categoria = CategoriaGasto::query()->withCount('gastos')->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $categoria = CategoriaGasto::query()
+            ->where('user_id', $userId)
+            ->withCount(['gastos' => fn ($q) => $q->where('user_id', $userId)])
+            ->findOrFail($id);
 
         $gastosCount = (int) $categoria->gastos_count;
 
-        $categoria->gastos()->each(function (Gasto $gasto) {
+        $categoria->gastos()
+            ->where('user_id', $userId)
+            ->each(function (Gasto $gasto) {
             if ($gasto->comprobante_path && str_starts_with($gasto->comprobante_path, 'comprobantes/gastos/')) {
                 Storage::disk('public')->delete($gasto->comprobante_path);
             }
         });
 
-        $categoria->gastos()->delete();
+        $categoria->gastos()->where('user_id', $userId)->delete();
         $categoria->delete();
 
         if ($this->categoriaId === $id) {
@@ -84,7 +101,11 @@ class Categorias extends Component
 
     public function toggleActivo(int $id): void
     {
-        $categoria = CategoriaGasto::query()->findOrFail($id);
+        $userId = (int) auth()->id();
+
+        $categoria = CategoriaGasto::query()
+            ->where('user_id', $userId)
+            ->findOrFail($id);
         $categoria->update(['activo' => ! (bool) $categoria->activo]);
         $estado = $categoria->fresh()->activo ? 'activada' : 'desactivada';
         $this->dispatch('toast', message: "Categoría {$estado}.");
@@ -103,8 +124,14 @@ class Categorias extends Component
 
     public function render()
     {
+        $userId = (int) auth()->id();
+
         return view('livewire.caja-chica.categorias', [
-            'categorias' => CategoriaGasto::query()->withCount('gastos')->orderBy('nombre')->get(),
+            'categorias' => CategoriaGasto::query()
+                ->where('user_id', $userId)
+                ->withCount(['gastos' => fn ($q) => $q->where('user_id', $userId)])
+                ->orderBy('nombre')
+                ->get(),
         ])->layout('layouts.app', [
             'header' => new HtmlString('<h2 class="font-semibold text-xl text-gray-800 leading-tight">Categorías</h2>'),
         ]);

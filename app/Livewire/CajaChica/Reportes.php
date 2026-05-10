@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\HtmlString;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Reportes extends Component
@@ -26,6 +27,8 @@ class Reportes extends Component
 
     public function generarPdf()
     {
+        $userId = (int) auth()->id();
+
         $rateKey = 'pdf:'.(auth()->id() ? ('user:'.auth()->id()) : ('ip:'.(request()->ip() ?? 'unknown')));
         $maxAttempts = 10;
         $decaySeconds = 60 * 10;
@@ -41,7 +44,11 @@ class Reportes extends Component
         $data = $this->validate([
             'desde' => ['required', 'date'],
             'hasta' => ['required', 'date', 'after_or_equal:desde'],
-            'aportante_id' => ['nullable', 'integer', 'exists:aportantes,id'],
+            'aportante_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('aportantes', 'id')->where(fn ($q) => $q->where('user_id', $userId)),
+            ],
         ]);
 
         $desde = Carbon::parse($data['desde'])->toDateString();
@@ -50,12 +57,14 @@ class Reportes extends Component
 
         $ingresosQuery = Ingreso::query()
             ->with('aportante')
+            ->where('user_id', $userId)
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderBy('fecha')
             ->orderBy('id');
 
         $gastosQuery = Gasto::query()
             ->with(['aportante', 'categoria'])
+            ->where('user_id', $userId)
             ->whereBetween('fecha', [$desde, $hasta])
             ->orderBy('fecha')
             ->orderBy('id');
@@ -70,6 +79,7 @@ class Reportes extends Component
 
         $ingresosTotales = Ingreso::query()
             ->select('aportante_id', DB::raw('SUM(monto) as total'))
+            ->where('user_id', $userId)
             ->whereBetween('fecha', [$desde, $hasta])
             ->when($aportanteId, fn ($q) => $q->where('aportante_id', $aportanteId))
             ->groupBy('aportante_id')
@@ -77,12 +87,14 @@ class Reportes extends Component
 
         $gastosTotales = Gasto::query()
             ->select('aportante_id', DB::raw('SUM(monto) as total'))
+            ->where('user_id', $userId)
             ->whereBetween('fecha', [$desde, $hasta])
             ->when($aportanteId, fn ($q) => $q->where('aportante_id', $aportanteId))
             ->groupBy('aportante_id')
             ->pluck('total', 'aportante_id');
 
         $aportantes = Aportante::query()
+            ->where('user_id', $userId)
             ->when($aportanteId, fn ($q) => $q->where('id', $aportanteId))
             ->orderBy('nombre')
             ->get(['id', 'nombre']);
@@ -124,8 +136,13 @@ class Reportes extends Component
 
     public function render()
     {
+        $userId = (int) auth()->id();
+
         return view('livewire.caja-chica.reportes', [
-            'aportantes' => Aportante::query()->orderBy('nombre')->get(['id', 'nombre']),
+            'aportantes' => Aportante::query()
+                ->where('user_id', $userId)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre']),
         ])->layout('layouts.app', [
             'header' => new HtmlString('<h2 class="font-semibold text-xl text-gray-800 leading-tight">Reportes</h2>'),
         ]);
