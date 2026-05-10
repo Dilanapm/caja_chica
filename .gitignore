@@ -1,0 +1,62 @@
+# Laravel
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+/auth.json
+
+# Docker Compose overrides locales (no versionar)
+compose.override.yaml
+compose.override.yml
+docker-compose.override.yml
+docker-compose.override.yaml
+
+# Variables de entorno (nunca subir al repo)
+.env
+.env.*
+!.env.example
+
+# Config local de herramientas IA (no forma parte del código fuente)
+/.claude/
+
+# IDE / editores
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+*.swp
+*.swo
+*~
+
+# Laravel IDE Helper (generado localmente con barryvdh/laravel-ide-helper)
+/_ide_helper.php
+/_ide_helper_models.php
+/.phpstorm.meta.php
+
+# Artefactos de sistema operativo
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Logs de gestores de paquetes
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos de respaldo
+*.bak
+*.tmp
+
+# Instrucciones locales de Claude Code (no forman parte del código fuente)
+/instrucciones_claude/
