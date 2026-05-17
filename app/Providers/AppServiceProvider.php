@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Audit;
+use App\Models\CategoriaGasto;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -26,6 +28,28 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(Registered::class, function (Registered $event) {
+            $categorias = [
+                ['nombre' => 'Luz',                 'descripcion' => 'Factura de electricidad'],
+                ['nombre' => 'Agua',                'descripcion' => 'Servicio de agua potable'],
+                ['nombre' => 'Gas',                 'descripcion' => 'Gas doméstico o industrial'],
+                ['nombre' => 'Combustible',         'descripcion' => 'Gasolina, diésel u otro combustible'],
+                ['nombre' => 'Recreos',             'descripcion' => 'Gastos de recreación y esparcimiento'],
+                ['nombre' => 'Comida',              'descripcion' => 'Alimentación y refrigerios'],
+                ['nombre' => 'Préstamos bancarios', 'descripcion' => 'Cuotas o pagos de préstamos bancarios'],
+                ['nombre' => 'Transporte',          'descripcion' => 'Pasajes y movilidad'],
+                ['nombre' => 'Wifi',                'descripcion' => 'Servicio de internet o WiFi'],
+                ['nombre' => 'Otros',               'descripcion' => 'Gastos varios no categorizados'],
+            ];
+
+            foreach ($categorias as $cat) {
+                CategoriaGasto::firstOrCreate(
+                    ['user_id' => $event->user->id, 'nombre' => $cat['nombre']],
+                    ['descripcion' => $cat['descripcion'], 'activo' => true]
+                );
+            }
+        });
+
         Event::listen(Login::class, function (Login $event) {
             Audit::recordSession('login', $event->user);
         });
