@@ -26,7 +26,9 @@
                     <select id="aportante_id" class="mt-1 block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" wire:model.defer="aportante_id">
                         <option value="">Todos los aportantes</option>
                         @foreach($aportantes as $a)
-                            <option value="{{ $a->id }}">{{ $a->nombre }}</option>
+                            <option value="{{ $a->id }}">
+                                {{ $a->nombre }}{{ $isAdmin ? ' — ' . ($a->user?->name ?? '?') : '' }}
+                            </option>
                         @endforeach
                     </select>
                     <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Filtra el reporte por un aportante específico, o deja en blanco para incluir todos.</p>

@@ -38,6 +38,11 @@ class Ingresos extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    private function isAdmin(): bool
+    {
+        return auth()->user()->isAdmin();
+    }
+
     public function mount(): void
     {
         $this->fecha = now()->toDateString();
@@ -47,16 +52,13 @@ class Ingresos extends Component
     {
         if ($property === 'perPage') {
             $this->perPage = (int) $this->perPage;
-
             if (! in_array($this->perPage, self::PER_PAGE_OPTIONS, true)) {
                 $this->perPage = self::PER_PAGE_OPTIONS[0];
             }
         }
 
         if ($property === 'buscar') {
-            $search = trim($this->buscar);
-            $search = mb_substr($search, 0, 255);
-
+            $search = mb_substr(trim($this->buscar), 0, 255);
             if ($search !== $this->buscar) {
                 $this->buscar = $search;
             }
@@ -69,41 +71,45 @@ class Ingresos extends Component
 
     protected function rules(): array
     {
-        $userId = (int) auth()->id();
-
         return [
-            'fecha' => ['required', 'date'],
-            'aportante_id' => [
+            'fecha'          => ['required', 'date'],
+            'aportante_id'   => [
                 'required',
                 'integer',
-                Rule::exists('aportantes', 'id')->where(fn ($q) => $q->where('user_id', $userId)),
+                Rule::exists('aportantes', 'id')->when(
+                    ! $this->isAdmin(),
+                    fn ($r) => $r->where(fn ($q) => $q->where('user_id', auth()->id()))
+                ),
             ],
-            'monto' => ['required', 'numeric', 'gt:0'],
+            'monto'          => ['required', 'numeric', 'gt:0'],
             'metodo_ingreso' => ['required', Rule::in(Ingreso::METODOS)],
-            'referencia' => ['nullable', 'string', 'max:255'],
-            'nota' => ['nullable', 'string', 'max:255'],
-            'comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'referencia'     => ['nullable', 'string', 'max:255'],
+            'nota'           => ['nullable', 'string', 'max:255'],
+            'comprobante'    => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
     }
 
     public function save(): void
     {
-        $userId = (int) auth()->id();
+        if ($this->isAdmin()) {
+            return;
+        }
+
         $data = $this->validate();
 
         $payload = [
-            'user_id' => $userId,
-            'fecha' => $data['fecha'],
-            'aportante_id' => $data['aportante_id'],
-            'monto' => $data['monto'],
+            'user_id'        => auth()->id(),
+            'fecha'          => $data['fecha'],
+            'aportante_id'   => $data['aportante_id'],
+            'monto'          => $data['monto'],
             'metodo_ingreso' => $data['metodo_ingreso'],
-            'referencia' => $data['referencia'],
-            'nota' => $data['nota'],
+            'referencia'     => $data['referencia'],
+            'nota'           => $data['nota'],
         ];
 
         if ($this->ingresoId) {
             $ingreso = Ingreso::query()
-                ->where('user_id', $userId)
+                ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
                 ->findOrFail($this->ingresoId);
             $oldPath = $ingreso->comprobante_path;
 
@@ -132,20 +138,22 @@ class Ingresos extends Component
 
     public function edit(int $id): void
     {
-        $userId = (int) auth()->id();
+        if ($this->isAdmin()) {
+            return;
+        }
 
         $ingreso = Ingreso::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->findOrFail($id);
 
-        $this->ingresoId = (int) $ingreso->id;
-        $this->fecha = $ingreso->fecha->toDateString();
-        $this->aportante_id = (int) $ingreso->aportante_id;
-        $this->monto = (string) $ingreso->monto;
-        $this->metodo_ingreso = (string) $ingreso->metodo_ingreso;
-        $this->referencia = $ingreso->referencia;
-        $this->nota = $ingreso->nota;
-        $this->comprobante = null;
+        $this->ingresoId            = (int) $ingreso->id;
+        $this->fecha                = $ingreso->fecha->toDateString();
+        $this->aportante_id         = (int) $ingreso->aportante_id;
+        $this->monto                = (string) $ingreso->monto;
+        $this->metodo_ingreso       = (string) $ingreso->metodo_ingreso;
+        $this->referencia           = $ingreso->referencia;
+        $this->nota                 = $ingreso->nota;
+        $this->comprobante          = null;
         $this->comprobantePathActual = $ingreso->comprobante_path;
 
         $this->resetErrorBag();
@@ -159,10 +167,12 @@ class Ingresos extends Component
 
     public function delete(int $id): void
     {
-        $userId = (int) auth()->id();
+        if ($this->isAdmin()) {
+            return;
+        }
 
         $ingreso = Ingreso::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->findOrFail($id);
 
         if ($ingreso->comprobante_path && str_starts_with($ingreso->comprobante_path, 'comprobantes/ingresos/')) {
@@ -175,14 +185,14 @@ class Ingresos extends Component
 
     private function resetForm(): void
     {
-        $this->ingresoId = null;
-        $this->fecha = now()->toDateString();
-        $this->aportante_id = null;
-        $this->monto = '';
-        $this->metodo_ingreso = Ingreso::METODO_EFECTIVO;
-        $this->referencia = null;
-        $this->nota = null;
-        $this->comprobante = null;
+        $this->ingresoId            = null;
+        $this->fecha                = now()->toDateString();
+        $this->aportante_id         = null;
+        $this->monto                = '';
+        $this->metodo_ingreso       = Ingreso::METODO_EFECTIVO;
+        $this->referencia           = null;
+        $this->nota                 = null;
+        $this->comprobante          = null;
         $this->comprobantePathActual = null;
 
         $this->resetErrorBag();
@@ -191,45 +201,37 @@ class Ingresos extends Component
 
     public function render()
     {
-        $userId = (int) auth()->id();
-
         $query = Ingreso::query()
-            ->with('aportante')
-            ->where('user_id', $userId)
+            ->with($this->isAdmin() ? ['aportante', 'user'] : ['aportante'])
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->orderByDesc('fecha')
             ->orderByDesc('id');
 
         if ($this->fDesde) {
             $query->whereDate('fecha', '>=', $this->fDesde);
         }
-
         if ($this->fHasta) {
             $query->whereDate('fecha', '<=', $this->fHasta);
         }
-
         if ($this->fAportanteId) {
             $query->where('aportante_id', $this->fAportanteId);
         }
-
         if ($this->fMetodo) {
             $query->where('metodo_ingreso', $this->fMetodo);
         }
-
         if (trim($this->buscar) !== '') {
             $search = '%'.trim($this->buscar).'%';
-            $query->where(function ($q) use ($search) {
-                $q->where('referencia', 'like', $search)
-                    ->orWhere('nota', 'like', $search);
-            });
+            $query->where(fn ($q) => $q->where('referencia', 'like', $search)->orWhere('nota', 'like', $search));
         }
 
         return view('livewire.caja-chica.ingresos', [
             'aportantes' => Aportante::query()
-                ->where('user_id', $userId)
+                ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
                 ->orderBy('nombre')
                 ->get(),
-            'ingresos' => $query->paginate($this->perPage),
-            'metodos' => Ingreso::METODOS,
+            'ingresos'   => $query->paginate($this->perPage),
+            'metodos'    => Ingreso::METODOS,
+            'isAdmin'    => $this->isAdmin(),
         ])->layout('layouts.app', [
             'header' => new HtmlString('<h2 class="font-semibold text-xl text-gray-800 leading-tight">Ingresos</h2>'),
         ]);

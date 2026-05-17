@@ -1,6 +1,7 @@
 <div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
 
-    {{-- Formulario --}}
+    {{-- Formulario (oculto para admin) --}}
+    @if(!$isAdmin)
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
         <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
             <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $gastoId ? 'Editar gasto' : 'Nuevo gasto' }}</h3>
@@ -106,6 +107,7 @@
             </form>
         </div>
     </div>
+    @endif
 
     {{-- Listado --}}
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
@@ -184,13 +186,18 @@
                             -{{ number_format((float) $gasto->monto, 2, '.', ',') }}
                         </span>
                     </div>
-                    <p class="text-xs text-slate-400 dark:text-slate-500">{{ $gasto->aportante?->nombre ?? '—' }}</p>
+                    <p class="text-xs text-slate-400 dark:text-slate-500">Aportante: {{ $gasto->aportante?->nombre ?? '—' }}</p>
+                    @if($isAdmin)
+                        <p class="text-xs text-slate-400 dark:text-slate-500">Registrado por: {{ $gasto->user?->name ?? '—' }}</p>
+                    @endif
                     <div class="flex items-center gap-4 pt-1">
                         @if($gasto->comprobante_path)
                             <a class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" href="{{ Storage::disk('public')->url($gasto->comprobante_path) }}" target="_blank" rel="noopener noreferrer">Comprobante ↗</a>
                         @endif
-                        <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium" wire:click="edit({{ $gasto->id }})">Editar</button>
-                        <button type="button" class="text-xs text-red-500 hover:text-red-700 font-medium" @click="$store.confirm.ask('Eliminar gasto', '¿Deseas eliminar este gasto? Esta acción no se puede deshacer.', () => $wire.delete({{ $gasto->id }}))">Eliminar</button>
+                        @if(!$isAdmin)
+                            <button type="button" class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium" wire:click="edit({{ $gasto->id }})">Editar</button>
+                            <button type="button" class="text-xs text-red-500 hover:text-red-700 font-medium" @click="$store.confirm.ask('Eliminar gasto', '¿Deseas eliminar este gasto? Esta acción no se puede deshacer.', () => $wire.delete({{ $gasto->id }}))">Eliminar</button>
+                        @endif
                     </div>
                 </div>
             @empty
@@ -207,6 +214,9 @@
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Descripción</th>
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Categoría</th>
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider hidden lg:table-cell">Aportante</th>
+                        @if($isAdmin)
+                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider hidden lg:table-cell">Registrado por</th>
+                        @endif
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Método</th>
                         <th class="px-5 py-3 text-right text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Monto</th>
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider hidden xl:table-cell">Proveedor</th>
@@ -226,6 +236,11 @@
                                 </span>
                             </td>
                             <td class="px-5 py-3 text-sm text-slate-600 dark:text-slate-300 hidden lg:table-cell">{{ $gasto->aportante?->nombre ?? '—' }}</td>
+                            @if($isAdmin)
+                                <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400 hidden lg:table-cell">
+                                    {{ $gasto->user?->name ?? '—' }}
+                                </td>
+                            @endif
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                                     {{ $gasto->metodo_pago }}
@@ -244,13 +259,17 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3 text-right whitespace-nowrap">
-                                <button type="button" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3" wire:click="edit({{ $gasto->id }})">Editar</button>
-                                <button type="button" class="text-xs font-medium text-red-500 hover:text-red-700" @click="$store.confirm.ask('Eliminar gasto', '¿Deseas eliminar este gasto? Esta acción no se puede deshacer.', () => $wire.delete({{ $gasto->id }}))">Eliminar</button>
+                                @if(!$isAdmin)
+                                    <button type="button" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3" wire:click="edit({{ $gasto->id }})">Editar</button>
+                                    <button type="button" class="text-xs font-medium text-red-500 hover:text-red-700" @click="$store.confirm.ask('Eliminar gasto', '¿Deseas eliminar este gasto? Esta acción no se puede deshacer.', () => $wire.delete({{ $gasto->id }}))">Eliminar</button>
+                                @else
+                                    <span class="text-xs text-slate-300 dark:text-slate-600">—</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin gastos.</td>
+                            <td colspan="{{ $isAdmin ? 11 : 10 }}" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin gastos.</td>
                         </tr>
                     @endforelse
                 </tbody>

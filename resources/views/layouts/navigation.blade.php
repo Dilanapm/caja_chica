@@ -19,6 +19,9 @@
                     <x-nav-link :href="route('categorias')" :active="request()->routeIs('categorias')">Categorías</x-nav-link>
                     <x-nav-link :href="route('aportantes')" :active="request()->routeIs('aportantes')">Aportantes</x-nav-link>
                     <x-nav-link :href="route('reportes')" :active="request()->routeIs('reportes')">Reportes</x-nav-link>
+                    @if(Auth::user()->isAdmin())
+                        <x-nav-link :href="route('auditoria')" :active="request()->routeIs('auditoria')">Auditoría</x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -86,6 +89,9 @@
             <x-responsive-nav-link :href="route('categorias')" :active="request()->routeIs('categorias')">Categorías</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('aportantes')" :active="request()->routeIs('aportantes')">Aportantes</x-responsive-nav-link>
             <x-responsive-nav-link :href="route('reportes')" :active="request()->routeIs('reportes')">Reportes</x-responsive-nav-link>
+            @if(Auth::user()->isAdmin())
+                <x-responsive-nav-link :href="route('auditoria')" :active="request()->routeIs('auditoria')">Auditoría</x-responsive-nav-link>
+            @endif
         </div>
 
         <div class="border-t border-slate-100 dark:border-slate-700 px-3 py-3">

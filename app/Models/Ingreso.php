@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Ingreso extends Model
 {
+    use Auditable;
+
     public const METODO_EFECTIVO = 'EFECTIVO';
     public const METODO_QR = 'QR';
 

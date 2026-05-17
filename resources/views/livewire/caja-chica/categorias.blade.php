@@ -58,6 +58,9 @@
                             @if($categoria->descripcion)
                                 <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ $categoria->descripcion }}</p>
                             @endif
+                            @if($isAdmin)
+                                <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ $categoria->user?->name ?? '—' }}</p>
+                            @endif
                         </div>
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $categoria->activo ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' }}">
                             {{ $categoria->activo ? 'Activo' : 'Inactivo' }}
@@ -92,6 +95,9 @@
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Nombre</th>
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Estado</th>
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Descripción</th>
+                        @if($isAdmin)
+                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Creado por</th>
+                        @endif
                         <th class="px-5 py-3 text-right text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
@@ -105,6 +111,12 @@
                                 </span>
                             </td>
                             <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ $categoria->descripcion ?? '—' }}</td>
+                            @if($isAdmin)
+                                <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+                                    {{ $categoria->user?->name ?? '—' }}
+                                    <div class="text-xs text-slate-400">{{ $categoria->user?->email }}</div>
+                                </td>
+                            @endif
                             <td class="px-5 py-3 text-right whitespace-nowrap">
                                 <button type="button" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3" wire:click="edit({{ $categoria->id }})">Editar</button>
                                 <button type="button" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mr-3" wire:click="toggleActivo({{ $categoria->id }})">
@@ -123,7 +135,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin categorías.</td>
+                            <td colspan="{{ $isAdmin ? 5 : 4 }}" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin categorías.</td>
                         </tr>
                     @endforelse
                 </tbody>

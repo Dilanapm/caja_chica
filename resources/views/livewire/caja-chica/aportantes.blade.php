@@ -81,6 +81,10 @@
                 <thead>
                     <tr class="border-b border-slate-100 dark:border-slate-700">
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Nombre</th>
+                        @if($isAdmin)
+                            <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Usuario</th>
+                            <th class="px-5 py-3 text-right text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Saldo</th>
+                        @endif
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Estado</th>
                         <th class="px-5 py-3 text-left text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Nota</th>
                         <th class="px-5 py-3 text-right text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Acciones</th>
@@ -88,8 +92,20 @@
                 </thead>
                 <tbody class="divide-y divide-slate-50 dark:divide-slate-700">
                     @forelse($aportantes as $aportante)
+                        @php
+                            $saldo = (float)($aportante->total_ingresos ?? 0) - (float)($aportante->total_gastos ?? 0);
+                        @endphp
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
                             <td class="px-5 py-3 text-sm font-medium text-slate-800 dark:text-slate-100">{{ $aportante->nombre }}</td>
+                            @if($isAdmin)
+                                <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">
+                                    {{ $aportante->user?->name ?? '—' }}
+                                    <div class="text-xs text-slate-400">{{ $aportante->user?->email }}</div>
+                                </td>
+                                <td class="px-5 py-3 text-sm text-right font-medium {{ $saldo >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' }}">
+                                    Bs {{ number_format($saldo, 2, '.', ',') }}
+                                </td>
+                            @endif
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $aportante->activo ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' }}">
                                     {{ $aportante->activo ? 'Activo' : 'Inactivo' }}
@@ -105,7 +121,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin aportantes.</td>
+                            <td colspan="{{ $isAdmin ? 6 : 4 }}" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin aportantes.</td>
                         </tr>
                     @endforelse
                 </tbody>

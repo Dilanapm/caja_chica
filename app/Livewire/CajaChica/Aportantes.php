@@ -15,39 +15,44 @@ class Aportantes extends Component
     public ?string $nota = null;
     public bool $activo = true;
 
+    private function isAdmin(): bool
+    {
+        return auth()->user()->isAdmin();
+    }
+
     protected function rules(): array
     {
-        $userId = (int) auth()->id();
-
         return [
             'nombre' => [
                 'required',
                 'string',
                 'max:255',
                 Rule::unique('aportantes', 'nombre')
-                    ->where(fn ($q) => $q->where('user_id', $userId))
+                    ->when(
+                        ! $this->isAdmin(),
+                        fn ($r) => $r->where(fn ($q) => $q->where('user_id', auth()->id()))
+                    )
                     ->ignore($this->aportanteId),
             ],
-            'nota' => ['nullable', 'string'],
+            'nota'   => ['nullable', 'string'],
             'activo' => ['boolean'],
         ];
     }
 
     public function save(): void
     {
-        $userId = (int) auth()->id();
         $data = $this->validate();
 
         if ($this->aportanteId) {
             $aportante = Aportante::query()
-                ->where('user_id', $userId)
+                ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
                 ->findOrFail($this->aportanteId);
             $aportante->update($data);
             $this->dispatch('toast', message: 'Aportante actualizado.');
         } else {
             Aportante::query()->create([
                 ...$data,
-                'user_id' => $userId,
+                'user_id' => auth()->id(),
             ]);
             $this->dispatch('toast', message: 'Aportante creado.');
         }
@@ -57,16 +62,14 @@ class Aportantes extends Component
 
     public function edit(int $id): void
     {
-        $userId = (int) auth()->id();
-
         $aportante = Aportante::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->findOrFail($id);
 
         $this->aportanteId = (int) $aportante->id;
-        $this->nombre = (string) $aportante->nombre;
-        $this->nota = $aportante->nota;
-        $this->activo = (bool) $aportante->activo;
+        $this->nombre      = (string) $aportante->nombre;
+        $this->nota        = $aportante->nota;
+        $this->activo      = (bool) $aportante->activo;
     }
 
     public function cancel(): void
@@ -76,10 +79,8 @@ class Aportantes extends Component
 
     public function toggleActivo(int $id): void
     {
-        $userId = (int) auth()->id();
-
         $aportante = Aportante::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->findOrFail($id);
         $aportante->update(['activo' => ! (bool) $aportante->activo]);
         $estado = $aportante->fresh()->activo ? 'activado' : 'desactivado';
@@ -89,9 +90,9 @@ class Aportantes extends Component
     private function resetForm(): void
     {
         $this->aportanteId = null;
-        $this->nombre = '';
-        $this->nota = null;
-        $this->activo = true;
+        $this->nombre      = '';
+        $this->nota        = null;
+        $this->activo      = true;
 
         $this->resetErrorBag();
         $this->resetValidation();
@@ -99,11 +100,17 @@ class Aportantes extends Component
 
     public function render()
     {
+        $aportantes = Aportante::query()
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
+            ->withSum('ingresos as total_ingresos', 'monto')
+            ->withSum('gastos as total_gastos', 'monto')
+            ->with('user')
+            ->orderBy('nombre')
+            ->get();
+
         return view('livewire.caja-chica.aportantes', [
-            'aportantes' => Aportante::query()
-                ->where('user_id', (int) auth()->id())
-                ->orderBy('nombre')
-                ->get(),
+            'aportantes' => $aportantes,
+            'isAdmin'    => $this->isAdmin(),
         ])->layout('layouts.app', [
             'header' => new HtmlString('<h2 class="font-semibold text-xl text-gray-800 leading-tight">Aportantes</h2>'),
         ]);

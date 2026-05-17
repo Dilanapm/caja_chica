@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Audit;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +26,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(Login::class, function (Login $event) {
+            Audit::recordSession('login', $event->user);
+        });
+
+        Event::listen(Logout::class, function (Logout $event) {
+            if ($event->user) {
+                Audit::recordSession('logout', $event->user);
+            }
+        });
+
         RateLimiter::for('web', function (Request $request) {
             $ip = $request->ip() ?? 'unknown';
 

@@ -8,30 +8,37 @@ use Illuminate\Database\Seeder;
 
 class CategoriaGastoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    private array $categorias = [
+        ['nombre' => 'Luz',                  'descripcion' => 'Factura de electricidad'],
+        ['nombre' => 'Agua',                 'descripcion' => 'Servicio de agua potable'],
+        ['nombre' => 'Gas',                  'descripcion' => 'Gas doméstico o industrial'],
+        ['nombre' => 'Combustible',          'descripcion' => 'Gasolina, diésel u otro combustible'],
+        ['nombre' => 'Recreos',              'descripcion' => 'Gastos de recreación y esparcimiento'],
+        ['nombre' => 'Comida',               'descripcion' => 'Alimentación y refrigerios'],
+        ['nombre' => 'Préstamos bancarios',  'descripcion' => 'Cuotas o pagos de préstamos bancarios'],
+        ['nombre' => 'Transporte',           'descripcion' => 'Pasajes y movilidad'],
+        ['nombre' => 'Wifi',                 'descripcion' => 'Servicio de internet o WiFi'],
+        ['nombre' => 'Otros',                'descripcion' => 'Gastos varios no categorizados'],
+    ];
+
     public function run(): void
     {
-        $userIds = User::query()->pluck('id');
+        $users = User::all();
 
-        if ($userIds->isEmpty()) {
+        if ($users->isEmpty()) {
+            $this->command?->warn('No hay usuarios. Crea un usuario primero y vuelve a ejecutar este seeder.');
             return;
         }
 
-        $categorias = [
-            ['nombre' => 'Internet'],
-            ['nombre' => 'Luz'],
-            ['nombre' => 'Pasajes'],
-        ];
-
-        foreach ($userIds as $userId) {
-            foreach ($categorias as $categoria) {
-                CategoriaGasto::updateOrCreate(
-                    ['user_id' => $userId, 'nombre' => $categoria['nombre']],
-                    ['activo' => true]
+        foreach ($users as $user) {
+            foreach ($this->categorias as $cat) {
+                CategoriaGasto::firstOrCreate(
+                    ['user_id' => $user->id, 'nombre' => $cat['nombre']],
+                    ['descripcion' => $cat['descripcion'], 'activo' => true]
                 );
             }
         }
+
+        $this->command?->info('Categorías creadas para ' . $users->count() . ' usuario(s).');
     }
 }

@@ -280,5 +280,21 @@ return [
         'winner'                   => 'ganador',
         'work'                     => 'trabajo',
         'year'                     => 'año',
+
+        // Caja Chica
+        'aportante_id'             => 'aportante',
+        'categoria_id'             => 'categoría',
+        'metodo_pago'              => 'método de pago',
+        'metodo_ingreso'           => 'método de ingreso',
+        'monto'                    => 'monto',
+        'fecha'                    => 'fecha',
+        'descripcion'              => 'descripción',
+        'proveedor'                => 'proveedor',
+        'referencia'               => 'referencia',
+        'comprobante'              => 'comprobante',
+        'nota'                     => 'nota',
+        'activo'                   => 'estado',
+        'desde'                    => 'fecha desde',
+        'hasta'                    => 'fecha hasta',
     ],
 ];

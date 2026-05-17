@@ -43,6 +43,11 @@ class Gastos extends Component
 
     protected $paginationTheme = 'tailwind';
 
+    private function isAdmin(): bool
+    {
+        return auth()->user()->isAdmin();
+    }
+
     public function mount(): void
     {
         $this->fecha = now()->toDateString();
@@ -52,16 +57,13 @@ class Gastos extends Component
     {
         if ($property === 'perPage') {
             $this->perPage = (int) $this->perPage;
-
             if (! in_array($this->perPage, self::PER_PAGE_OPTIONS, true)) {
                 $this->perPage = self::PER_PAGE_OPTIONS[0];
             }
         }
 
         if ($property === 'buscar') {
-            $search = trim($this->buscar);
-            $search = mb_substr($search, 0, 255);
-
+            $search = mb_substr(trim($this->buscar), 0, 255);
             if ($search !== $this->buscar) {
                 $this->buscar = $search;
             }
@@ -74,55 +76,62 @@ class Gastos extends Component
 
     protected function rules(): array
     {
-        $userId = (int) auth()->id();
-
         return [
-            'fecha' => ['required', 'date'],
+            'fecha'        => ['required', 'date'],
             'aportante_id' => [
                 'required',
                 'integer',
-                Rule::exists('aportantes', 'id')->where(fn ($q) => $q->where('user_id', $userId)),
+                Rule::exists('aportantes', 'id')->when(
+                    ! $this->isAdmin(),
+                    fn ($r) => $r->where(fn ($q) => $q->where('user_id', auth()->id()))
+                ),
             ],
             'categoria_id' => [
                 'required',
                 'integer',
-                Rule::exists('categorias_gasto', 'id')->where(fn ($q) => $q->where('user_id', $userId)),
+                Rule::exists('categorias_gasto', 'id')->when(
+                    ! $this->isAdmin(),
+                    fn ($r) => $r->where(fn ($q) => $q->where('user_id', auth()->id()))
+                ),
             ],
-            'monto' => ['required', 'numeric', 'gt:0'],
-            'metodo_pago' => ['required', Rule::in(Gasto::METODOS)],
-            'descripcion' => ['required', 'string', 'max:255'],
-            'proveedor' => ['nullable', 'string', 'max:255'],
-            'referencia' => ['nullable', 'string', 'max:255'],
-            'comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'monto'        => ['required', 'numeric', 'gt:0'],
+            'metodo_pago'  => ['required', Rule::in(Gasto::METODOS)],
+            'descripcion'  => ['required', 'string', 'max:255'],
+            'proveedor'    => ['nullable', 'string', 'max:255'],
+            'referencia'   => ['nullable', 'string', 'max:255'],
+            'comprobante'  => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
     }
 
     public function save(): void
     {
-        $userId = (int) auth()->id();
+        if ($this->isAdmin()) {
+            return;
+        }
+
         $data = $this->validate();
 
         $saldoDisponible = $this->saldoDisponibleParaAportante((int) $data['aportante_id']);
         if ((float) $data['monto'] > $saldoDisponible) {
-            $this->addError('monto', 'Saldo insuficiente para este aportante. Saldo disponible: '.number_format($saldoDisponible, 2, '.', ','));
+            $this->addError('monto', 'Saldo insuficiente. Saldo disponible: '.number_format($saldoDisponible, 2, '.', ','));
             return;
         }
 
         $payload = [
-            'user_id' => $userId,
-            'fecha' => $data['fecha'],
+            'user_id'      => auth()->id(),
+            'fecha'        => $data['fecha'],
             'aportante_id' => $data['aportante_id'],
             'categoria_id' => $data['categoria_id'],
-            'monto' => $data['monto'],
-            'metodo_pago' => $data['metodo_pago'],
-            'descripcion' => $data['descripcion'],
-            'proveedor' => $data['proveedor'],
-            'referencia' => $data['referencia'],
+            'monto'        => $data['monto'],
+            'metodo_pago'  => $data['metodo_pago'],
+            'descripcion'  => $data['descripcion'],
+            'proveedor'    => $data['proveedor'],
+            'referencia'   => $data['referencia'],
         ];
 
         if ($this->gastoId) {
-            $gasto = Gasto::query()
-                ->where('user_id', $userId)
+            $gasto   = Gasto::query()
+                ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
                 ->findOrFail($this->gastoId);
             $oldPath = $gasto->comprobante_path;
 
@@ -151,22 +160,24 @@ class Gastos extends Component
 
     public function edit(int $id): void
     {
-        $userId = (int) auth()->id();
+        if ($this->isAdmin()) {
+            return;
+        }
 
         $gasto = Gasto::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->findOrFail($id);
 
-        $this->gastoId = (int) $gasto->id;
-        $this->fecha = $gasto->fecha->toDateString();
-        $this->aportante_id = (int) $gasto->aportante_id;
-        $this->categoria_id = (int) $gasto->categoria_id;
-        $this->monto = (string) $gasto->monto;
-        $this->metodo_pago = (string) $gasto->metodo_pago;
-        $this->descripcion = (string) $gasto->descripcion;
-        $this->proveedor = $gasto->proveedor;
-        $this->referencia = $gasto->referencia;
-        $this->comprobante = null;
+        $this->gastoId              = (int) $gasto->id;
+        $this->fecha                = $gasto->fecha->toDateString();
+        $this->aportante_id         = (int) $gasto->aportante_id;
+        $this->categoria_id         = (int) $gasto->categoria_id;
+        $this->monto                = (string) $gasto->monto;
+        $this->metodo_pago          = (string) $gasto->metodo_pago;
+        $this->descripcion          = (string) $gasto->descripcion;
+        $this->proveedor            = $gasto->proveedor;
+        $this->referencia           = $gasto->referencia;
+        $this->comprobante          = null;
         $this->comprobantePathActual = $gasto->comprobante_path;
 
         $this->resetErrorBag();
@@ -180,10 +191,12 @@ class Gastos extends Component
 
     public function delete(int $id): void
     {
-        $userId = (int) auth()->id();
+        if ($this->isAdmin()) {
+            return;
+        }
 
         $gasto = Gasto::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->findOrFail($id);
 
         if ($gasto->comprobante_path && str_starts_with($gasto->comprobante_path, 'comprobantes/gastos/')) {
@@ -196,37 +209,35 @@ class Gastos extends Component
 
     private function saldoDisponibleParaAportante(int $aportanteId): float
     {
-        $userId = (int) auth()->id();
-
+        // Admin calcula sobre todos los registros; usuario normal solo los suyos
         $ingresos = (float) Ingreso::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->where('aportante_id', $aportanteId)
             ->sum('monto');
 
         $gastosQuery = Gasto::query()
-            ->where('user_id', $userId)
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->where('aportante_id', $aportanteId);
+
         if ($this->gastoId) {
             $gastosQuery->where('id', '!=', $this->gastoId);
         }
 
-        $gastos = (float) $gastosQuery->sum('monto');
-
-        return $ingresos - $gastos;
+        return $ingresos - (float) $gastosQuery->sum('monto');
     }
 
     private function resetForm(): void
     {
-        $this->gastoId = null;
-        $this->fecha = now()->toDateString();
-        $this->aportante_id = null;
-        $this->categoria_id = null;
-        $this->monto = '';
-        $this->metodo_pago = Gasto::METODO_EFECTIVO;
-        $this->descripcion = '';
-        $this->proveedor = null;
-        $this->referencia = null;
-        $this->comprobante = null;
+        $this->gastoId              = null;
+        $this->fecha                = now()->toDateString();
+        $this->aportante_id         = null;
+        $this->categoria_id         = null;
+        $this->monto                = '';
+        $this->metodo_pago          = Gasto::METODO_EFECTIVO;
+        $this->descripcion          = '';
+        $this->proveedor            = null;
+        $this->referencia           = null;
+        $this->comprobante          = null;
         $this->comprobantePathActual = null;
 
         $this->resetErrorBag();
@@ -235,53 +246,45 @@ class Gastos extends Component
 
     public function render()
     {
-        $userId = (int) auth()->id();
-
         $query = Gasto::query()
-            ->with(['aportante', 'categoria'])
-            ->where('user_id', $userId)
+            ->with($this->isAdmin() ? ['aportante', 'categoria', 'user'] : ['aportante', 'categoria'])
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
             ->orderByDesc('fecha')
             ->orderByDesc('id');
 
         if ($this->fDesde) {
             $query->whereDate('fecha', '>=', $this->fDesde);
         }
-
         if ($this->fHasta) {
             $query->whereDate('fecha', '<=', $this->fHasta);
         }
-
         if ($this->fAportanteId) {
             $query->where('aportante_id', $this->fAportanteId);
         }
-
         if ($this->fCategoriaId) {
             $query->where('categoria_id', $this->fCategoriaId);
         }
-
         if ($this->fMetodo) {
             $query->where('metodo_pago', $this->fMetodo);
         }
-
         if (trim($this->buscar) !== '') {
             $search = '%'.trim($this->buscar).'%';
-            $query->where(function ($q) use ($search) {
-                $q->where('descripcion', 'like', $search)
-                    ->orWhere('referencia', 'like', $search);
-            });
+            $query->where(fn ($q) => $q->where('descripcion', 'like', $search)->orWhere('referencia', 'like', $search));
         }
 
         return view('livewire.caja-chica.gastos', [
             'aportantes' => Aportante::query()
-                ->where('user_id', $userId)
+                ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
                 ->orderBy('nombre')
                 ->get(),
             'categorias' => CategoriaGasto::query()
-                ->where('user_id', $userId)
+                ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
+                ->where('activo', true)
                 ->orderBy('nombre')
                 ->get(),
-            'gastos' => $query->paginate($this->perPage),
-            'metodos' => Gasto::METODOS,
+            'gastos'     => $query->paginate($this->perPage),
+            'metodos'    => Gasto::METODOS,
+            'isAdmin'    => $this->isAdmin(),
         ])->layout('layouts.app', [
             'header' => new HtmlString('<h2 class="font-semibold text-xl text-gray-800 leading-tight">Gastos</h2>'),
         ]);
