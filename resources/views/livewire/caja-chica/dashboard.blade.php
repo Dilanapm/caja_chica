@@ -2,10 +2,15 @@
 
     {{-- Saldo total --}}
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm p-5">
-        <p class="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-            {{ $isAdmin ? 'Saldo total global' : 'Mi saldo total' }}
-        </p>
-        <p class="mt-2 text-3xl font-bold {{ $saldoTotal >= 0 ? 'text-emerald-600' : 'text-red-500' }}">
+        <div class="flex items-center justify-between">
+            <p class="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                {{ $isAdmin ? 'Saldo total global' : 'Mi saldo total' }}
+            </p>
+            <span class="inline-flex items-center justify-center w-9 h-9 rounded-full {{ $saldoTotal >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-red-50 dark:bg-red-900/20' }}">
+                <svg class="w-5 h-5 {{ $saldoTotal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 9m18 0V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3" /></svg>
+            </span>
+        </div>
+        <p class="mt-3 text-3xl font-bold {{ $saldoTotal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400' }}">
             Bs {{ number_format($saldoTotal, 2, '.', ',') }}
         </p>
     </div>
@@ -13,9 +18,12 @@
     {{-- Saldos por aportante --}}
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
         <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                {{ $isAdmin ? 'Saldo por aportante (todos los usuarios)' : 'Saldo por aportante' }}
-            </h3>
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                    {{ $isAdmin ? 'Saldo por aportante (todos los usuarios)' : 'Saldo por aportante' }}
+                </h3>
+            </div>
         </div>
 
         @if($aportantesConSaldo->isEmpty())
@@ -27,9 +35,9 @@
                     <div class="px-5 py-3 flex items-center justify-between gap-3">
                         <div>
                             <p class="text-sm font-medium text-slate-800 dark:text-slate-100">{{ $a->nombre }}</p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500">
-                                ↑ Bs {{ number_format($a->total_ingresos, 2, '.', ',') }}
-                                · ↓ Bs {{ number_format($a->total_gastos, 2, '.', ',') }}
+                            <p class="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-2 mt-0.5">
+                                <span class="text-emerald-600 dark:text-emerald-400">↑ Bs {{ number_format($a->total_ingresos, 2, '.', ',') }}</span>
+                                <span class="text-red-500 dark:text-red-400">↓ Bs {{ number_format($a->total_gastos, 2, '.', ',') }}</span>
                             </p>
                         </div>
                         <span class="text-sm font-semibold shrink-0 {{ $a->saldo >= 0 ? 'text-emerald-600' : 'text-red-500' }}">
@@ -76,7 +84,10 @@
         {{-- Gastos del mes por categoría --}}
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+                <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
                 <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Gastos del mes por categoría</h3>
+            </div>
             </div>
             <div class="divide-y divide-slate-50 dark:divide-slate-700">
                 @forelse($gastosMesPorCategoria as $row)
@@ -93,7 +104,10 @@
         {{-- Últimos movimientos --}}
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
             <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+                <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Últimos movimientos</h3>
+            </div>
             </div>
 
             {{-- Mobile --}}

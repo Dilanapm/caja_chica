@@ -4,7 +4,14 @@
     @if(!$isAdmin)
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
         <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $ingresoId ? 'Editar ingreso' : 'Nuevo ingreso' }}</h3>
+            <div class="flex items-center gap-2">
+                @if($ingresoId)
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" /></svg>
+                @else
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                @endif
+                <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $ingresoId ? 'Editar ingreso' : 'Nuevo ingreso' }}</h3>
+            </div>
         </div>
         <div class="p-5">
             <form wire:submit.prevent="save" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -93,11 +100,19 @@
     {{-- Listado --}}
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
         <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Listado</h3>
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" /></svg>
+                <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-200">Ingresos registrados</h3>
+            </div>
         </div>
 
         {{-- Filtros --}}
-        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-700">
+            <div class="flex items-center gap-1.5 mb-3">
+                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" /></svg>
+                <span class="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">Filtros</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div>
                 <x-input-label for="fDesde" value="Desde" />
                 <x-text-input id="fDesde" type="date" class="mt-1 block w-full text-sm" wire:model.live="fDesde" />
@@ -124,10 +139,6 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-span-2 sm:col-span-1 lg:col-span-1">
-                <x-input-label for="buscar" value="Buscar" />
-                <x-text-input id="buscar" type="text" class="mt-1 block w-full text-sm" wire:model.live.debounce.300ms="buscar" placeholder="Referencia o nota…" />
-            </div>
             <div>
                 <x-input-label for="perPage" value="Por página" />
                 <select id="perPage" class="mt-1 block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" wire:model.live="perPage">
@@ -136,6 +147,7 @@
                     <option value="50">50</option>
                 </select>
             </div>
+            </div>
         </div>
 
         {{-- Mobile: tarjetas --}}
@@ -143,11 +155,15 @@
             @forelse($ingresos as $ingreso)
                 <div class="px-5 py-4 space-y-1">
                     <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
+                        <div class="flex items-start gap-2.5 min-w-0">
+                            <span class="mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-900/30 shrink-0">
+                                <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            </span>
+                            <div class="min-w-0">
                             <p class="text-sm font-medium text-slate-800 dark:text-slate-100">{{ $ingreso->aportante?->nombre ?? '—' }}</p>
                             <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                                 {{ $ingreso->fecha->format('d/m/Y') }}
-                                · {{ $ingreso->metodo_ingreso }}
+                                · <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium {{ $ingreso->metodo_ingreso === 'EFECTIVO' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }}">{{ $ingreso->metodo_ingreso }}</span>
                                 @if($ingreso->referencia) · {{ $ingreso->referencia }} @endif
                             </p>
                             @if($ingreso->nota)
@@ -156,12 +172,13 @@
                             @if($isAdmin)
                                 <p class="text-xs text-slate-400 dark:text-slate-500">Registrado por: {{ $ingreso->user?->name ?? '—' }}</p>
                             @endif
+                            </div>
                         </div>
-                        <span class="text-sm font-semibold text-emerald-600 shrink-0">
-                            +{{ number_format((float) $ingreso->monto, 2, '.', ',') }}
+                        <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+                            +Bs {{ number_format((float) $ingreso->monto, 2, '.', ',') }}
                         </span>
                     </div>
-                    <div class="flex items-center gap-4 pt-1">
+                    <div class="flex items-center gap-4 pt-1 pl-9">
                         @if($ingreso->comprobante_path)
                             <a class="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300" href="{{ Storage::disk('public')->url($ingreso->comprobante_path) }}" target="_blank" rel="noopener noreferrer">Comprobante ↗</a>
                         @endif
@@ -172,7 +189,10 @@
                     </div>
                 </div>
             @empty
-                <div class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin ingresos.</div>
+                <div class="px-5 py-10 text-center">
+                    <svg class="mx-auto w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" /></svg>
+                    <p class="text-sm text-slate-400 dark:text-slate-500">Sin ingresos registrados.</p>
+                </div>
             @endforelse
         </div>
 
@@ -205,12 +225,12 @@
                                 </td>
                             @endif
                             <td class="px-5 py-3">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $ingreso->metodo_ingreso === 'EFECTIVO' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }}">
                                     {{ $ingreso->metodo_ingreso }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 text-sm font-semibold text-emerald-600 text-right whitespace-nowrap">
-                                +{{ number_format((float) $ingreso->monto, 2, '.', ',') }}
+                            <td class="px-5 py-3 text-sm font-semibold text-emerald-600 dark:text-emerald-400 text-right whitespace-nowrap">
+                                +Bs {{ number_format((float) $ingreso->monto, 2, '.', ',') }}
                             </td>
                             <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400 hidden lg:table-cell">{{ $ingreso->referencia ?? '—' }}</td>
                             <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400 hidden lg:table-cell">{{ $ingreso->nota ?? '—' }}</td>
@@ -232,7 +252,10 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $isAdmin ? 9 : 8 }}" class="px-5 py-8 text-center text-sm text-slate-400 dark:text-slate-500">Sin ingresos.</td>
+                            <td colspan="{{ $isAdmin ? 9 : 8 }}" class="px-5 py-10 text-center">
+                                <svg class="mx-auto w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75" /></svg>
+                                <p class="text-sm text-slate-400 dark:text-slate-500">Sin ingresos registrados.</p>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

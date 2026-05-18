@@ -38,7 +38,6 @@ class Gastos extends Component
     public ?int $fAportanteId = null;
     public ?int $fCategoriaId = null;
     public ?string $fMetodo = null;
-    public string $buscar = '';
     public int $perPage = 10;
 
     protected $paginationTheme = 'tailwind';
@@ -62,14 +61,7 @@ class Gastos extends Component
             }
         }
 
-        if ($property === 'buscar') {
-            $search = mb_substr(trim($this->buscar), 0, 255);
-            if ($search !== $this->buscar) {
-                $this->buscar = $search;
-            }
-        }
-
-        if (in_array($property, ['fDesde', 'fHasta', 'fAportanteId', 'fCategoriaId', 'fMetodo', 'buscar', 'perPage'], true)) {
+        if (in_array($property, ['fDesde', 'fHasta', 'fAportanteId', 'fCategoriaId', 'fMetodo', 'perPage'], true)) {
             $this->resetPage();
         }
     }
@@ -267,11 +259,6 @@ class Gastos extends Component
         if ($this->fMetodo) {
             $query->where('metodo_pago', $this->fMetodo);
         }
-        if (trim($this->buscar) !== '') {
-            $search = '%'.trim($this->buscar).'%';
-            $query->where(fn ($q) => $q->where('descripcion', 'like', $search)->orWhere('referencia', 'like', $search));
-        }
-
         return view('livewire.caja-chica.gastos', [
             'aportantes' => Aportante::query()
                 ->when(! $this->isAdmin(), fn ($q) => $q->where('user_id', auth()->id()))
