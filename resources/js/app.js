@@ -16,12 +16,28 @@ document.addEventListener('alpine:init', () => {
         },
     });
 
+    Alpine.store('success', {
+        open: false,
+        message: '',
+        show(message) {
+            this.message = message;
+            this.open = true;
+        },
+        close() {
+            this.open = false;
+        },
+    });
+
     Alpine.store('toast', {
         items: [],
         add(message, type = 'success') {
+            if (type === 'success') {
+                Alpine.store('success').show(message);
+                return;
+            }
             const id = Date.now();
             this.items.push({ id, message, type });
-            setTimeout(() => this.remove(id), 4000);
+            setTimeout(() => this.remove(id), 5000);
         },
         remove(id) {
             this.items = this.items.filter(i => i.id !== id);

@@ -41,5 +41,6 @@
 
         <x-toast-container />
         <x-confirm-dialog />
+        <x-success-dialog />
     </body>
 </html>
