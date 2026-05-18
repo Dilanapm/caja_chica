@@ -1,5 +1,38 @@
 import './bootstrap';
 
+/**
+ * Busca el primer campo con error de validación, hace scroll hacia él
+ * y le aplica el destello de advertencia.
+ */
+function scrollToFirstError() {
+    const firstItem = document.querySelector('ul.text-red-600 li');
+    if (!firstItem) return;
+
+    const wrapper = firstItem.closest('ul')?.parentElement;
+    if (!wrapper) return;
+
+    wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const field = wrapper.querySelector('input:not([type="hidden"]), select, textarea');
+    if (field) {
+        field.classList.remove('field-error-flash');
+        void field.offsetWidth; // reiniciar animación
+        field.classList.add('field-error-flash');
+        field.addEventListener('animationend', () => {
+            field.classList.remove('field-error-flash');
+        }, { once: true });
+    }
+}
+
+// Registrar el hook de Livewire 3 antes de que inicialice Alpine
+document.addEventListener('livewire:init', () => {
+    Livewire.hook('commit', ({ succeed }) => {
+        succeed(() => {
+            requestAnimationFrame(scrollToFirstError);
+        });
+    });
+});
+
 // Alpine es provisto por Livewire 3 — no importar ni iniciar por separado.
 document.addEventListener('alpine:init', () => {
 
