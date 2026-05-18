@@ -39,7 +39,7 @@
                     <select id="categoria_id" class="mt-1 block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" wire:model.defer="categoria_id">
                         <option value="">Seleccione…</option>
                         @foreach($categorias as $c)
-                            <option value="{{ $c->id }}">{{ $c->nombre }}</option>
+                            <option value="{{ $c->id }}">{{ $c->icono }} {{ $c->nombre }}</option>
                         @endforeach
                     </select>
                     <p class="mt-1 text-xs text-slate-400 dark:text-slate-500">Clasifica el tipo de gasto.</p>
@@ -154,7 +154,7 @@
                 <select id="fCategoriaId" class="mt-1 block w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500" wire:model.live="fCategoriaId">
                     <option value="">Todas</option>
                     @foreach($categorias as $c)
-                        <option value="{{ $c->id }}">{{ $c->nombre }}</option>
+                        <option value="{{ $c->id }}">{{ $c->icono }} {{ $c->nombre }}</option>
                     @endforeach
                 </select>
             </div>
@@ -193,8 +193,7 @@
                                 <span>{{ $gasto->fecha->format('d/m/Y') }}</span>
                                 <span>·</span>
                                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 font-medium">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400 shrink-0"></span>
-                                    {{ $gasto->categoria?->nombre ?? '—' }}
+                                    {{ $gasto->categoria?->icono ?? '📦' }} {{ $gasto->categoria?->nombre ?? '—' }}
                                 </span>
                                 <span>·</span>
                                 <span class="inline-flex items-center px-1.5 py-0.5 rounded {{ $gasto->metodo_pago === 'EFECTIVO' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' }} font-medium">{{ $gasto->metodo_pago }}</span>
@@ -257,8 +256,7 @@
                             <td class="px-5 py-3 text-sm text-slate-800 dark:text-slate-100">{{ $gasto->descripcion }}</td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-violet-500 dark:bg-violet-400 shrink-0"></span>
-                                    {{ $gasto->categoria?->nombre ?? '—' }}
+                                    {{ $gasto->categoria?->icono ?? '📦' }} {{ $gasto->categoria?->nombre ?? '—' }}
                                 </span>
                             </td>
                             <td class="px-5 py-3 text-sm text-slate-600 dark:text-slate-300 hidden lg:table-cell">{{ $gasto->aportante?->nombre ?? '—' }}</td>

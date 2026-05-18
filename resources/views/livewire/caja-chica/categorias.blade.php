@@ -54,7 +54,9 @@
                 <div class="px-5 py-4">
                     <div class="flex items-start justify-between gap-3">
                         <div>
-                            <p class="text-sm font-medium text-slate-800 dark:text-slate-100">{{ $categoria->nombre }}</p>
+                            <p class="text-sm font-medium text-slate-800 dark:text-slate-100">
+                                <span class="mr-1">{{ $categoria->icono }}</span>{{ $categoria->nombre }}
+                            </p>
                             @if($categoria->descripcion)
                                 <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{{ $categoria->descripcion }}</p>
                             @endif
@@ -104,7 +106,9 @@
                 <tbody class="divide-y divide-slate-50 dark:divide-slate-700">
                     @forelse($categorias as $categoria)
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
-                            <td class="px-5 py-3 text-sm font-medium text-slate-800 dark:text-slate-100">{{ $categoria->nombre }}</td>
+                            <td class="px-5 py-3 text-sm font-medium text-slate-800 dark:text-slate-100">
+                                <span class="mr-1">{{ $categoria->icono }}</span>{{ $categoria->nombre }}
+                            </td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $categoria->activo ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' }}">
                                     {{ $categoria->activo ? 'Activo' : 'Inactivo' }}

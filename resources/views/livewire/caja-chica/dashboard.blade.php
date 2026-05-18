@@ -92,7 +92,9 @@
             <div class="divide-y divide-slate-50 dark:divide-slate-700">
                 @forelse($gastosMesPorCategoria as $row)
                     <div class="flex items-center justify-between px-5 py-3">
-                        <span class="text-sm text-slate-700 dark:text-slate-300">{{ $row->categoria?->nombre ?? '—' }}</span>
+                        <span class="text-sm text-slate-700 dark:text-slate-300">
+                            {{ $row->categoria?->icono ?? '📦' }} {{ $row->categoria?->nombre ?? '—' }}
+                        </span>
                         <span class="text-sm font-medium text-red-500">Bs {{ number_format((float) $row->total, 2, '.', ',') }}</span>
                     </div>
                 @empty
@@ -118,7 +120,7 @@
                             <p class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{{ $m['aportante'] ?? '—' }}</p>
                             <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                                 {{ $m['fecha']?->format('d/m/Y') }}
-                                · {{ $m['tipo'] === 'INGRESO' ? 'Ingreso' : ($m['categoria'] ?? 'Gasto') }}
+                                · @if($m['tipo'] === 'INGRESO') Ingreso @else {{ ($m['icono_categoria'] ?? '') }} {{ $m['categoria'] ?? 'Gasto' }} @endif
                                 @if($isAdmin && $m['usuario']) · {{ $m['usuario'] }} @endif
                             </p>
                         </div>
@@ -156,7 +158,7 @@
                                 </td>
                                 <td class="px-5 py-3 text-sm text-slate-600 dark:text-slate-300 whitespace-nowrap">{{ $m['fecha']?->format('d/m/Y') }}</td>
                                 <td class="px-5 py-3 text-sm text-slate-700 dark:text-slate-200">{{ $m['aportante'] ?? '—' }}</td>
-                                <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ $m['categoria'] ?? '—' }}</td>
+                                <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ $m['icono_categoria'] ?? '' }} {{ $m['categoria'] ?? '—' }}</td>
                                 @if($isAdmin)
                                     <td class="px-5 py-3 text-sm text-slate-500 dark:text-slate-400">{{ $m['usuario'] ?? '—' }}</td>
                                 @endif

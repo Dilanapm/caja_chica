@@ -24,6 +24,32 @@ class CategoriaGasto extends Model
         'activo' => 'boolean',
     ];
 
+    public function getIconoAttribute(): string
+    {
+        $mapa = [
+            'luz'         => '💡',
+            'agua'        => '💧',
+            'gas'         => '🔥',
+            'combustible' => '⛽',
+            'recreo'      => '🎉',
+            'comida'      => '🍽️',
+            'préstamo'    => '🏦',
+            'prestamo'    => '🏦',
+            'transporte'  => '🚌',
+            'wifi'        => '📶',
+            'internet'    => '📶',
+        ];
+
+        $lower = mb_strtolower($this->nombre);
+        foreach ($mapa as $clave => $icono) {
+            if (str_contains($lower, $clave)) {
+                return $icono;
+            }
+        }
+
+        return '📦';
+    }
+
     public function gastos(): HasMany
     {
         return $this->hasMany(Gasto::class, 'categoria_id');

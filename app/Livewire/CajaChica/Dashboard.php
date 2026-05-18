@@ -107,13 +107,14 @@ class Dashboard extends Component
                 'usuario'   => $i->user?->name ?? null,
             ]))
             ->merge($ultimosGastos->map(fn (Gasto $g) => [
-                'tipo'      => 'GASTO',
-                'fecha'     => $g->fecha,
-                'aportante' => $g->aportante?->nombre,
-                'categoria' => $g->categoria?->nombre,
-                'metodo'    => $g->metodo_pago,
-                'monto'     => (float) $g->monto,
-                'usuario'   => $g->user?->name ?? null,
+                'tipo'            => 'GASTO',
+                'fecha'           => $g->fecha,
+                'aportante'       => $g->aportante?->nombre,
+                'categoria'       => $g->categoria?->nombre,
+                'icono_categoria' => $g->categoria?->icono,
+                'metodo'          => $g->metodo_pago,
+                'monto'           => (float) $g->monto,
+                'usuario'         => $g->user?->name ?? null,
             ]))
             ->sortByDesc(fn (array $m) => ($m['fecha']?->format('Y-m-d') ?? ''))
             ->take(10)
